@@ -9,5 +9,5 @@ package MODELO;
  * @author luisc
  */
 public class Prueba {
-    
+    int ola;
 }
