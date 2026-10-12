@@ -27,5 +27,46 @@ public final class ReglasJuego implements IReglasJuego {
         return COLORES[0];
     }
 
-    
+     @Override
+    public boolean nombreDisponible(String nombre) {
+        return nombre != null && !nombresTomados.contains(nombre.trim().toLowerCase());
+    }
+
+    @Override
+    public Jugador registrarJugador(String nombre) {
+        String t = nombre.trim();
+        nombresTomados.add(t.toLowerCase());
+        return new Jugador(sigJugador++, t, "neco.png");
+    }
+
+    @Override
+    public void liberarNombre(String nombre) {
+        if (nombre != null) nombresTomados.remove(nombre.trim().toLowerCase());
+    }
+
+    @Override
+    public EstadoPartida crearPartida(String nombre, String clave, int maxJugadores, Jugador anfitrion) {
+        EstadoPartida p = new EstadoPartida(sigPartida++, nombre.trim(), clave, maxJugadores);
+        anfitrion.setEsAnfitrion(true);
+        anfitrion.setPreparado(true);
+        anfitrion.setColor(colorLibre(p));
+        p.agregarJugador(anfitrion);
+        partidas.put(p.getIdPartida(), p);
+        return p;
+    }
+
+    @Override
+    public List<EstadoPartida> listarSalasDisponibles() {
+        List<EstadoPartida> r = new ArrayList<>();
+        for (EstadoPartida p : partidas.values()) {
+            if (EstadoPartida.ESPERANDO.equals(p.getEstado())) r.add(p);
+        }
+        return r;
+    }
+
+    @Override
+    public boolean validarClave(int idPartida, String clave) {
+        EstadoPartida p = partidas.get(idPartida);
+        return p != null && p.claveCoincide(clave);
+    }
 }

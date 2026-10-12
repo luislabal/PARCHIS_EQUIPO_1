@@ -10,6 +10,13 @@ public interface IReglasJuego {
 
     EstadoPartida iniciarPartida(int idPartida);
 
-  
+  String motivoBloqueoInicio(int idPartida);
+
+    boolean nombreDisponible(String nombre);
+
+    Jugador registrarJugador(String nombre);
+
+    void liberarNombre(String nombre);
+
    
 }

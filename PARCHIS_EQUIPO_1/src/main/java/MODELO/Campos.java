@@ -19,5 +19,16 @@ public final class Campos {
         return sb.toString();
     }
 
-    
+     public static String empaquetar(List<String> campos) {
+        return empaquetar(campos.toArray(new String[0]));
+    }
+
+    public static List<String> desempaquetar(String texto) {
+        List<String> r = new ArrayList<>();
+        if (texto == null || texto.isEmpty()) return r;
+        for (String parte : texto.split(";", -1)) {
+            r.add(URLDecoder.decode(parte, StandardCharsets.UTF_8));
+        }
+        return r;
+    }
 }

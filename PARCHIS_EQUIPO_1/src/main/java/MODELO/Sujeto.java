@@ -14,5 +14,16 @@ public abstract class Sujeto {
         }
     }
 
-   
+    public void quitarObservador(IObservador o) {
+        observadores.remove(o);
+    }
+
+    public void notificarObservadores(EventoModelo evento) {
+       
+        for (IObservador o : new ArrayList<>(observadores)) {
+            if (observadores.contains(o)) {
+                o.actualizar(evento);
+            }
+        }
+    }
 }

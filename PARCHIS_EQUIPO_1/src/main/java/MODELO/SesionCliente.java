@@ -22,5 +22,35 @@ final class SesionCliente {
     private final BlockingQueue<String> salida = new LinkedBlockingQueue<>();
     private volatile boolean cerrada;
 
-    
+    Jugador jugador;
+    EstadoPartida sala;
+    int solicitudSala = -1;
+
+    SesionCliente(Socket socket, Lobby lobby) {
+        this.socket = socket;
+        this.lobby = lobby;
+    }
+
+    String direccion() {
+        return String.valueOf(socket.getRemoteSocketAddress());
+    }
+
+    void iniciar() {
+        Thread escritor = new Thread(this::escribir, "escritor-" + direccion());
+        escritor.setDaemon(true);
+        escritor.start();
+        Thread lector = new Thread(this::leer, "lector-" + direccion());
+        lector.setDaemon(true);
+        lector.start();
+    }
+
+   
+    void enviar(String... campos) {
+        if (cerrada) return;
+        if (salida.size() > MAX_PENDIENTES) {   
+            cerrar();
+            return;
+        }
+        salida.add(Campos.empaquetar(campos));
+    }
 }

@@ -20,5 +20,11 @@ public final class Aplicacion {
         RED.setReceptor(linea -> SwingUtilities.invokeLater(() -> MODELO.procesarLinea(linea)));
     }
 
-    
+     private Aplicacion() { }
+
+    public static ModeloPartida getModelo() { return MODELO; }
+    public static ControladorRegistro getControladorRegistro() { return CTRL_REGISTRO; }
+    public static ControladorConfiguracion getControladorConfiguracion() { return CTRL_CONFIGURACION; }
+    public static ControladorUnirse getControladorUnirse() { return CTRL_UNIRSE; }
+    public static ControladorPartida getControladorPartida() { return CTRL_PARTIDA; }
 }

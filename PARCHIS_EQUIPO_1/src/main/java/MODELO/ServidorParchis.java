@@ -30,5 +30,21 @@ public final class ServidorParchis {
         }
     }
 
-    
+    public static ServerSocket arrancar(int puerto) throws IOException {
+        final Lobby lobby = new Lobby(new ReglasJuego());
+        final ServerSocket servidor = new ServerSocket(puerto);
+        Thread aceptador = new Thread(() -> {
+            while (!servidor.isClosed()) {
+                try {
+                    Socket cliente = servidor.accept();
+                    new SesionCliente(cliente, lobby).iniciar();
+                } catch (IOException ex) {
+                    if (!servidor.isClosed()) System.err.println("Error aceptando conexión: " + ex);
+                }
+            }
+        }, "aceptado");
+        aceptador.setDaemon(true);
+        aceptador.start();
+        return servidor;
+    }
 }
