@@ -47,20 +47,4 @@ public final class ServidorParchis {
         aceptador.start();
         return servidor;
     }
-    
-    private static void mostrarDirecciones(int puerto) {
-
-        try {
-            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                if (!ni.isUp() || ni.isLoopback()) continue;
-                for (InetAddress a : Collections.list(ni.getInetAddresses())) {
-                    if (a.getAddress().length == 4) {
-                        System.out.println("   " + a.getHostAddress() + ":" + puerto + "   (" + ni.getDisplayName() + ")");
-                    }
-                }
-            }
-        } catch (IOException ex) {
-        }
-    }
-    
 }

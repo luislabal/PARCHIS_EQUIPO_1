@@ -38,10 +38,4 @@ public final class CodecModelo {
         }
         return r;
     }
-
-    public static String codificar(EstadoPartida e) {
-        if (e == null) return "";
-        return Campos.empaquetar(String.valueOf(e.getIdPartida()), e.getNombre(),
-                String.valueOf(e.getMaxJugadores()), e.getEstado(), codificarJugadores(e.getJugadores()));
-    }
 }

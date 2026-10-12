@@ -17,7 +17,6 @@ public interface IReglasJuego {
     Jugador registrarJugador(String nombre);
 
     void liberarNombre(String nombre);
-    
-    
-    EstadoPartida crearPartida(String nombre, String clave, int maxJugadores, Jugador anfitrion);
+
+   
 }
