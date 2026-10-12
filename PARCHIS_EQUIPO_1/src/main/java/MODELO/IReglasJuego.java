@@ -10,7 +10,7 @@ public interface IReglasJuego {
 
     EstadoPartida iniciarPartida(int idPartida);
 
-  String motivoBloqueoInicio(int idPartida);
+    String motivoBloqueoInicio(int idPartida);
 
     boolean nombreDisponible(String nombre);
 
@@ -24,5 +24,11 @@ public interface IReglasJuego {
     List<EstadoPartida> listarSalasDisponibles();
 
     boolean validarClave(int idPartida, String clave);
+    EstadoPartida agregarJugador(int idPartida, Jugador jugador);
+
+
+    EstadoPartida cambiarPreparado(int idPartida, int idJugador, boolean preparado);
+
+    void abandonar(int idPartida, int idJugador);
 
 }

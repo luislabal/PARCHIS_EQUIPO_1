@@ -24,7 +24,9 @@ public class EventoModelo {
     public static final String INICIO_RECHAZADO = "INICIO_RECHAZADO";
     // Salir
     public static final String PARTIDA_ABANDONADA = "PARTIDA_ABANDONADA";
-    public static final String PARTIDA_CERRADA = "PARTIDA_CERRADA";      
+    public static final String PARTIDA_CERRADA = "PARTIDA_CERRADA";     
+    public static final String SALAS_ACTUALIZADAS = "SALAS_ACTUALIZADAS";     
+    public static final String CONEXION_PERDIDA = "CONEXION_PERDIDA";
     private final String tipo;
     private final EstadoPartida estado;
     private final String mensaje;
@@ -38,5 +40,11 @@ public class EventoModelo {
         return tipo;
     }
     
-    
+    public EstadoPartida getEstado() {
+        return estado;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
   }

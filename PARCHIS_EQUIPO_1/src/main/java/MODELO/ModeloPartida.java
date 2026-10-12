@@ -277,4 +277,28 @@ public void abandonarPartida() {
         }
     }
 
+    private void aplicarEstado(EstadoPartida e) {
+        if (e == null) return;
+        estadoPartida = e;
+        if (usuarioActual != null) {
+            Jugador yo = e.buscarPorId(usuarioActual.getId());
+            if (yo != null) {
+                usuarioActual.setEsAnfitrion(yo.isEsAnfitrion());
+                usuarioActual.setPreparado(yo.isPreparado());
+                usuarioActual.setColor(yo.getColor());
+            }
+        }
+    }
+
+    private void limpiarPartida() {
+        estadoPartida = null;
+        idSolicitudPropia = -1;
+        uniendose = false;
+        solicitudesPendientes = new ArrayList<>();
+        if (usuarioActual != null) {
+            usuarioActual.setEsAnfitrion(false);
+            usuarioActual.setPreparado(false);
+            usuarioActual.setColor(null);
+        }
+    }    
 }

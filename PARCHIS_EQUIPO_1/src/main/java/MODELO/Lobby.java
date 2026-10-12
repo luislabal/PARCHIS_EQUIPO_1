@@ -299,5 +299,43 @@ public final class Lobby {
         return s.jugador != null && s.sala != null && s.jugador.isEsAnfitrion();
     }
 
-    
+    private void reiniciar(SesionCliente s) {
+        s.sala = null;
+        if (s.jugador != null) {
+            s.jugador.setEsAnfitrion(false);
+            s.jugador.setPreparado(false);
+            s.jugador.setColor(null);
+        }
+    }
+
+    private List<SesionCliente> miembros(EstadoPartida sala) {
+        List<SesionCliente> r = new ArrayList<>();
+        for (SesionCliente s : sesiones) {
+            if (s.sala != null && s.sala.getIdPartida() == sala.getIdPartida()) r.add(s);
+        }
+        return r;
+    }
+
+    private SesionCliente anfitrionDe(EstadoPartida sala) {
+        for (Jugador j : sala.getJugadores()) {
+            if (j.isEsAnfitrion()) return porJugador.get(j.getId());
+        }
+        return null;
+    }
+
+    private EstadoPartida salaPorId(int id) {
+        for (SesionCliente s : sesiones) {
+            if (s.sala != null && s.sala.getIdPartida() == id) return s.sala;
+        }
+        return null;
+    }
+
+    private String textoCola(int idSala) {
+        List<Jugador> js = new ArrayList<>();
+        Deque<SesionCliente> cola = colas.get(idSala);
+        if (cola != null) {
+            for (SesionCliente r : cola) js.add(r.jugador);
+        }
+        return CodecModelo.codificarJugadores(js);
+    }
 }

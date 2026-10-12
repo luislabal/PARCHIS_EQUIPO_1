@@ -123,4 +123,16 @@ final class SesionCliente {
             System.err.println("Error atendiendo a " + direccion() + ": " + ex);
         }
     }
+     
+    private static String arg(List<String> c, int i) {
+        return i < c.size() ? c.get(i) : "";
+    }
+
+    private static int entero(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException ex) {
+            return -1;
+        }
+    }
 }
