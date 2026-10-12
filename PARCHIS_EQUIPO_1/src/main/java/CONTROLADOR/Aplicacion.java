@@ -27,4 +27,20 @@ public final class Aplicacion {
     public static ControladorConfiguracion getControladorConfiguracion() { return CTRL_CONFIGURACION; }
     public static ControladorUnirse getControladorUnirse() { return CTRL_UNIRSE; }
     public static ControladorPartida getControladorPartida() { return CTRL_PARTIDA; }
+
+    public static void conectar(String direccion) throws IOException {
+        String host = direccion.trim();
+        int puerto = Protocolo.PUERTO_POR_DEFECTO;
+        int i = host.lastIndexOf(':');
+        if (i >= 0) {
+            try {
+                puerto = Integer.parseInt(host.substring(i + 1).trim());
+            } catch (NumberFormatException ex) {
+                throw new IOException("Puerto no valido: " + host.substring(i + 1));
+            }
+            host = host.substring(0, i).trim();
+        }
+        if (host.isEmpty()) throw new IOException("Escribe la direccion del servidor");
+        RED.conectar(host, puerto);
+    }
 }

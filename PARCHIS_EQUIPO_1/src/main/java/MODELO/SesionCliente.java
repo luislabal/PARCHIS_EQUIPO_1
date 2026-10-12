@@ -53,4 +53,52 @@ final class SesionCliente {
         }
         salida.add(Campos.empaquetar(campos));
     }
+
+    void cerrar() {
+        cerrada = true;
+        salida.add(CIERRE);
+        try { socket.close(); } catch (IOException ignorada) { }
+    }
+
+    private void escribir() {
+        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
+            while (true) {
+                String m = salida.take();
+                if (CIERRE.equals(m)) break;
+                out.println(m);
+                if (out.checkError()) break;
+            }
+        } catch (IOException | InterruptedException ex) {
+            
+        }
+        cerrar();
+    }
+
+    private void leer() {
+        if (!lobby.conectar(this)) {
+            cerrar();
+            return;
+        }
+        try {
+            InputStream in = socket.getInputStream();
+            InputStreamReader lector = new InputStreamReader(in, StandardCharsets.UTF_8);
+            StringBuilder linea = new StringBuilder();
+            int ch;
+            while (!cerrada && (ch = lector.read()) != -1) {
+                if (ch == '\n') {
+                    atender(linea.toString().trim());
+                    linea.setLength(0);
+                } else if (linea.length() >= MAX_LINEA) {
+                    break;                                   
+                } else {
+                    linea.append((char) ch);
+                }
+            }
+        } catch (IOException ex) {
+          
+        } finally {
+            cerrar();
+            lobby.desconectar(this);      
+        }
+    }
 }

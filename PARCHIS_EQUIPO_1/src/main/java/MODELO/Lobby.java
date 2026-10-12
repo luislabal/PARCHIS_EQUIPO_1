@@ -134,4 +134,83 @@ public final class Lobby {
             }
         }
     }
+
+    synchronized void aceptar(SesionCliente s) {
+        EstadoPartida sala = s.sala;
+        String error = null;
+        Deque<SesionCliente> cola = sala == null ? null : colas.get(sala.getIdPartida());
+        if (!esAnfitrion(s)) error = "Solo el anfitrión puede aceptar solicitudes";
+        else if (cola == null || cola.isEmpty()) error = "No hay solicitudes pendientes";
+        else if (sala.estaLlena()) error = "La sala está llena";
+        if (error != null) {
+            s.enviar(EventoModelo.RESOLUCION_INVALIDA, CodecModelo.codificar(sala), error);
+            return;
+        }
+        SesionCliente nuevo = cola.pollFirst();
+        nuevo.solicitudSala = -1;
+        EstadoPartida e = reglas.agregarJugador(sala.getIdPartida(), nuevo.jugador);
+        if (e == null) {
+            nuevo.enviar(EventoModelo.UNION_RECHAZADA, "La sala ya no está disponible");
+            s.enviar(EventoModelo.RESOLUCION_INVALIDA, CodecModelo.codificar(sala),
+                    "No fue posible agregar a " + nuevo.jugador.getNombre());
+            return;
+        }
+        nuevo.sala = e;
+        log(nuevo.jugador.getNombre() + " entró a \"" + e.getNombre() + "\" (" + e.getJugadores().size() + "/" + e.getMaxJugadores() + ")");
+        String estado = CodecModelo.codificar(e);
+        nuevo.enviar(EventoModelo.UNION_ACEPTADA, estado, "Te aceptaron en \"" + e.getNombre() + "\"");
+        s.enviar(EventoModelo.JUGADOR_UNIDO, estado, textoCola(e.getIdPartida()), nuevo.jugador.getNombre());
+        for (SesionCliente m : miembros(e)) {
+            if (m != s && m != nuevo) {
+                m.enviar(EventoModelo.ESTADO_ACTUALIZADO, estado, nuevo.jugador.getNombre() + " se unió");
+            }
+        }
+        if (e.estaLlena() && !cola.isEmpty()) {
+            for (SesionCliente r : cola) {
+                r.solicitudSala = -1;
+                r.enviar(EventoModelo.UNION_RECHAZADA, "La sala se llenó");
+            }
+            cola.clear();
+            s.enviar(EventoModelo.SOLICITUD_RESUELTA, estado, textoCola(e.getIdPartida()),
+                    "La sala se llenó: se descartaron las solicitudes restantes");
+        }
+        difundirSalas();
+    }
+
+    synchronized void rechazar(SesionCliente s) {
+        EstadoPartida sala = s.sala;
+        String error = null;
+        Deque<SesionCliente> cola = sala == null ? null : colas.get(sala.getIdPartida());
+        if (!esAnfitrion(s)) error = "Solo el anfitrión puede rechazar solicitudes";
+        else if (cola == null || cola.isEmpty()) error = "No hay solicitudes pendientes";
+        if (error != null) {
+            s.enviar(EventoModelo.RESOLUCION_INVALIDA, CodecModelo.codificar(sala), error);
+            return;
+        }
+        SesionCliente r = cola.pollFirst();
+        r.solicitudSala = -1;
+        r.enviar(EventoModelo.UNION_RECHAZADA, "El anfitrión rechazó tu solicitud");
+        s.enviar(EventoModelo.SOLICITUD_RESUELTA, CodecModelo.codificar(sala), textoCola(sala.getIdPartida()),
+                "Rechazaste a " + r.jugador.getNombre());
+    }
+
+    synchronized void listo(SesionCliente s, boolean listo) {
+        EstadoPartida sala = s.sala;
+        if (s.jugador == null || sala == null) return;
+        String error = null;
+        if (!EstadoPartida.ESPERANDO.equals(sala.getEstado())) error = "La partida ya inició";
+        else if (esAnfitrion(s)) error = "El anfitrión siempre está listo";
+        if (error != null) {
+            s.enviar(EventoModelo.ESTADO_ACTUALIZADO, CodecModelo.codificar(sala), error);
+            return;
+        }
+        if (s.jugador.isPreparado() == listo) return;                       
+        reglas.cambiarPreparado(sala.getIdPartida(), s.jugador.getId(), listo);
+        log(s.jugador.getNombre() + (listo ? " está listo" : " ya no está listo") + " en \"" + sala.getNombre() + "\"");
+        String estado = CodecModelo.codificar(sala);
+        String msg = s.jugador.getNombre() + (listo ? " está listo" : " ya no está listo");
+        for (SesionCliente m : miembros(sala)) {
+            m.enviar(EventoModelo.ESTADO_ACTUALIZADO, estado, msg);
+        }
+    }
 }
