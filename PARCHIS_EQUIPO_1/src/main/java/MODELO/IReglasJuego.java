@@ -21,5 +21,8 @@ public interface IReglasJuego {
     
     EstadoPartida crearPartida(String nombre, String clave, int maxJugadores, Jugador anfitrion);
 
- 
+    List<EstadoPartida> listarSalasDisponibles();
+
+    boolean validarClave(int idPartida, String clave);
+
 }

@@ -34,4 +34,9 @@ public class EventoModelo {
         this.estado = estado;
         this.mensaje = mensaje;
     }
-}
+    public String getTipo() {
+        return tipo;
+    }
+    
+    
+  }

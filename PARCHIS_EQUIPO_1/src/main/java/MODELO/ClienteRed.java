@@ -75,5 +75,13 @@ public final class ClienteRed implements IServidorRemoto {
             avisarPerdida("No se pudo enviar al servidor");
         }
     }
+    public synchronized void cerrar() {
+        cerradoAdrede = true;
+        if (socket != null) {
+            try { socket.close(); } catch (IOException ignorada) { }
+        }
+        socket = null;
+        salida = null;
+    }
 
 }

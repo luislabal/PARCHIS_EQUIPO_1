@@ -99,4 +99,30 @@ public final class ReglasJuego implements IReglasJuego {
         if (p == null) return "La partida ya no existe";
         return p.motivoBloqueoInicio();
     }
+     @Override
+    public boolean puedeIniciar(int idPartida) {
+        return motivoBloqueoInicio(idPartida) == null;
+    }
+
+    @Override
+    public EstadoPartida iniciarPartida(int idPartida) {
+        String motivo = motivoBloqueoInicio(idPartida);
+        if (motivo != null) throw new IllegalStateException(motivo);
+        EstadoPartida p = partidas.get(idPartida);
+        p.setEstado(EstadoPartida.EN_CURSO);
+        return p;
+    }
+
+    @Override
+    public void abandonar(int idPartida, int idJugador) {
+        EstadoPartida p = partidas.get(idPartida);
+        if (p == null) return;
+        Jugador j = p.buscarPorId(idJugador);
+        if (j == null) return;
+        if (j.isEsAnfitrion()) {
+            partidas.remove(idPartida);      
+        } else {
+            p.quitarJugador(j);
+        }
+    }
 }

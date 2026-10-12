@@ -100,5 +100,27 @@ final class SesionCliente {
             cerrar();
             lobby.desconectar(this);      
         }
+    }   
+     private void atender(String linea) {
+        if (linea.isEmpty()) return;
+        try {
+            List<String> c = Campos.desempaquetar(linea);
+            if (c.isEmpty()) return;
+            switch (c.get(0)) {
+                case Protocolo.REGISTRAR: lobby.registrar(this, arg(c, 1)); break;
+                case Protocolo.CREAR: lobby.crear(this, arg(c, 1), arg(c, 2), entero(arg(c, 3))); break;
+                case Protocolo.SALAS: lobby.enviarSalas(this); break;
+                case Protocolo.UNIRSE: lobby.unirse(this, entero(arg(c, 1)), arg(c, 2)); break;
+                case Protocolo.CANCELAR_SOLICITUD: lobby.cancelarSolicitud(this); break;
+                case Protocolo.ACEPTAR: lobby.aceptar(this); break;
+                case Protocolo.RECHAZAR: lobby.rechazar(this); break;
+                case Protocolo.LISTO: lobby.listo(this, Boolean.parseBoolean(arg(c, 1).trim())); break;
+                case Protocolo.INICIAR: lobby.iniciar(this, entero(arg(c, 1))); break;
+                case Protocolo.ABANDONAR: lobby.abandonar(this, true); break;
+                default: break;                             
+            }
+        } catch (RuntimeException ex) {
+            System.err.println("Error atendiendo a " + direccion() + ": " + ex);
+        }
     }
 }

@@ -213,4 +213,91 @@ public final class Lobby {
             m.enviar(EventoModelo.ESTADO_ACTUALIZADO, estado, msg);
         }
     }
+    
+    synchronized void iniciar(SesionCliente s, int idPartida) {
+        EstadoPartida sala = s.sala;
+        String error = null;
+        if (s.jugador == null || sala == null || sala.getIdPartida() != idPartida) error = "No perteneces a esa partida";
+        else if (!esAnfitrion(s)) error = "Solo el anfitrión puede iniciar la partida";
+        else if (!reglas.puedeIniciar(idPartida)) error = reglas.motivoBloqueoInicio(idPartida);
+        if (error != null) {
+            s.enviar(EventoModelo.INICIO_RECHAZADO, CodecModelo.codificar(sala), error);
+            return;
+        }
+        EstadoPartida e = reglas.iniciarPartida(idPartida);
+        log("Partida \"" + e.getNombre() + "\" iniciada con " + e.getJugadores().size() + " jugadores");
+        Deque<SesionCliente> cola = colas.get(idPartida);
+        if (cola != null) {
+            for (SesionCliente r : cola) {
+                r.solicitudSala = -1;
+                r.enviar(EventoModelo.UNION_RECHAZADA, "La partida ya inició");
+            }
+            cola.clear();
+        }
+        String estado = CodecModelo.codificar(e);
+        for (SesionCliente m : miembros(e)) {
+            m.enviar(EventoModelo.PARTIDA_INICIADA, estado, "Partida iniciada");
+        }
+        difundirSalas();
+    }
+
+    synchronized void abandonar(SesionCliente s, boolean avisar) {
+        if (s.jugador == null) return;
+        if (s.sala == null) {
+            boolean habiaSolicitud = s.solicitudSala != -1;
+            cancelarSolicitud(s);
+            if (avisar && habiaSolicitud) s.enviar(EventoModelo.PARTIDA_ABANDONADA, SALISTE);
+            return;
+        }
+        EstadoPartida sala = s.sala;
+        int id = sala.getIdPartida();
+        boolean eraAnfitrion = esAnfitrion(s);
+        List<SesionCliente> resto = miembros(sala);
+        resto.remove(s);
+        reglas.abandonar(id, s.jugador.getId());
+        reiniciar(s);
+        log((s.jugador == null ? "?" : s.jugador.getNombre()) + " salio de \"" + sala.getNombre() + "\"");
+        if (avisar) s.enviar(EventoModelo.PARTIDA_ABANDONADA, SALISTE);
+        if (eraAnfitrion) {
+            for (SesionCliente m : resto) {
+                reiniciar(m);
+                m.enviar(EventoModelo.PARTIDA_CERRADA, "El anfitrion cerro la sala");
+            }
+            Deque<SesionCliente> cola = colas.remove(id);
+            if (cola != null) {
+                for (SesionCliente r : cola) {
+                    r.solicitudSala = -1;
+                    r.enviar(EventoModelo.UNION_RECHAZADA, "La sala se cerro");
+                }
+            }
+        } else {
+            String estado = CodecModelo.codificar(sala);
+            for (SesionCliente m : resto) {
+                m.enviar(EventoModelo.ESTADO_ACTUALIZADO, estado, "Un jugador salió de o partida");
+            }
+        }
+        difundirSalas();
+    }
+
+    synchronized void enviarSalas(SesionCliente s) {
+        s.enviar(mensajeSalas());
+    }
+
+    private void difundirSalas() {
+        String[] m = mensajeSalas();
+        for (SesionCliente s : sesiones) s.enviar(m);
+    }
+
+    private String[] mensajeSalas() {
+        List<String> m = new ArrayList<>();
+        m.add(EventoModelo.SALAS_ACTUALIZADAS);
+        for (EstadoPartida p : reglas.listarSalasDisponibles()) m.add(CodecModelo.codificar(p));
+        return m.toArray(new String[0]);
+    }
+
+    private boolean esAnfitrion(SesionCliente s) {
+        return s.jugador != null && s.sala != null && s.jugador.isEsAnfitrion();
+    }
+
+    
 }

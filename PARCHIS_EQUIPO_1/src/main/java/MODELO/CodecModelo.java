@@ -44,4 +44,11 @@ public final class CodecModelo {
         return Campos.empaquetar(String.valueOf(e.getIdPartida()), e.getNombre(),
                 String.valueOf(e.getMaxJugadores()), e.getEstado(), codificarJugadores(e.getJugadores()));
     }
+    
+    public static EstadoPartida decodificarEstado(String texto) {
+        List<String> c = Campos.desempaquetar(texto);
+        if (c.size() < 5) return null;
+        return EstadoPartida.reconstruir(Integer.parseInt(c.get(0)), c.get(1), Integer.parseInt(c.get(2)),
+                c.get(3), decodificarJugadores(c.get(4)));
+    }
 }

@@ -175,5 +175,106 @@ public class ModeloPartida extends Sujeto {
         }
         servidor.enviar(Protocolo.INICIAR, String.valueOf(idPartida));
     }
+public void abandonarPartida() {
+        if (usuarioActual == null || (estadoPartida == null && !haySolicitudPropiaPendiente())) return;
+        if (estadoPartida == null) {          
+            cancelarSolicitud();
+            limpiarPartida();
+            notificar(EventoModelo.PARTIDA_ABANDONADA, null, "Saliste de la partida");
+            return;
+        }
+        servidor.enviar(Protocolo.ABANDONAR);  
+    }
+    
+    public void procesarLinea(String linea) {
+        try {
+            List<String> c = Campos.desempaquetar(linea);
+            if (c.isEmpty()) return;
+            procesarMensaje(c.get(0), c.subList(1, c.size()));
+        } catch (RuntimeException ex) {
+            
+        }
+    }
+
+    private static String campo(List<String> c, int i) {
+        return i < c.size() ? c.get(i) : "";
+    }
+
+    private void procesarMensaje(String tipo, List<String> c) {
+        switch (tipo) {
+            case EventoModelo.USUARIO_REGISTRADO:
+                usuarioActual = CodecModelo.decodificarJugador(campo(c, 0));
+                notificar(tipo, null, usuarioActual.getNombre());
+                break;
+            case EventoModelo.REGISTRO_RECHAZADO:
+            case EventoModelo.CONFIGURACION_RECHAZADA:
+                notificar(tipo, null, campo(c, 0));
+                break;
+            case EventoModelo.PARTIDA_CREADA:
+                aplicarEstado(CodecModelo.decodificarEstado(campo(c, 0)));
+                solicitudesPendientes = new ArrayList<>();
+                notificar(tipo, estadoPartida, campo(c, 1));
+                break;
+            case EventoModelo.SALAS_ACTUALIZADAS:
+                salas = new ArrayList<>();
+                for (String s : c) {
+                    EstadoPartida e = CodecModelo.decodificarEstado(s);
+                    if (e != null) salas.add(e);
+                }
+                notificar(tipo, null, "");
+                break;
+            case EventoModelo.SOLICITUD_ENVIADA: {
+                if (!uniendose) break;        
+                EstadoPartida sala = CodecModelo.decodificarEstado(campo(c, 0));
+                idSolicitudPropia = sala.getIdPartida();
+                notificar(tipo, sala, campo(c, 1));
+                break;
+            }
+            case EventoModelo.UNION_ACEPTADA:
+                if (!uniendose) {              
+                    servidor.enviar(Protocolo.ABANDONAR);
+                    break;
+                }
+                idSolicitudPropia = -1;
+                uniendose = false;
+                aplicarEstado(CodecModelo.decodificarEstado(campo(c, 0)));
+                solicitudesPendientes = new ArrayList<>();
+                notificar(tipo, estadoPartida, campo(c, 1));
+                break;
+            case EventoModelo.UNION_RECHAZADA:
+                idSolicitudPropia = -1;
+                uniendose = false;
+                notificar(tipo, null, campo(c, 0));
+                break;
+            case EventoModelo.SOLICITUD_RECIBIDA:
+            case EventoModelo.SOLICITUD_RESUELTA:
+            case EventoModelo.JUGADOR_UNIDO:
+                aplicarEstado(CodecModelo.decodificarEstado(campo(c, 0)));
+                solicitudesPendientes = new ArrayList<>(CodecModelo.decodificarJugadores(campo(c, 1)));
+                notificar(tipo, estadoPartida, campo(c, 2));
+                break;
+            case EventoModelo.RESOLUCION_INVALIDA:
+            case EventoModelo.ESTADO_ACTUALIZADO:
+            case EventoModelo.INICIO_RECHAZADO:
+                aplicarEstado(CodecModelo.decodificarEstado(campo(c, 0)));
+                notificar(tipo, estadoPartida, campo(c, 1));
+                break;
+            case EventoModelo.PARTIDA_INICIADA:
+                aplicarEstado(CodecModelo.decodificarEstado(campo(c, 0)));
+                solicitudesPendientes = new ArrayList<>();
+                notificar(tipo, estadoPartida, campo(c, 1));
+                break;
+            case EventoModelo.PARTIDA_ABANDONADA:
+            case EventoModelo.PARTIDA_CERRADA:
+                limpiarPartida();
+                notificar(tipo, null, campo(c, 0));
+                break;
+            case EventoModelo.CONEXION_PERDIDA:
+                notificar(tipo, null, campo(c, 0));
+                break;
+            default:
+                break;
+        }
+    }
 
 }
