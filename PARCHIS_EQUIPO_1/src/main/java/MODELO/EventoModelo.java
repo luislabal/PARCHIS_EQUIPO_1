@@ -25,4 +25,14 @@ public class EventoModelo {
     // Salir
     public static final String PARTIDA_ABANDONADA = "PARTIDA_ABANDONADA";
     public static final String PARTIDA_CERRADA = "PARTIDA_CERRADA";      
+    
+    public EventoModelo(String tipo, EstadoPartida estado, String mensaje) {
+        this.tipo = tipo;
+        this.estado = estado;
+        this.mensaje = mensaje;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
 }

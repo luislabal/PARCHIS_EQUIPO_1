@@ -64,4 +64,15 @@ public final class ClienteRed implements IServidorRemoto {
         receptor.accept(Campos.empaquetar(EventoModelo.CONEXION_PERDIDA, motivo));
     }
 
+    @Override
+    public synchronized void enviar(String... campos) {
+        if (salida == null || !estaConectado()) {
+            avisarPerdida("No hay conexión con el servidor");
+            return;
+        }
+        salida.println(Campos.empaquetar(campos));
+        if (salida.checkError()) {
+            avisarPerdida("No se pudo enviar al servidor");
+        }
+    }
 }

@@ -53,4 +53,25 @@ final class SesionCliente {
         }
         salida.add(Campos.empaquetar(campos));
     }
+    
+    void cerrar() {
+        cerrada = true;
+        salida.add(CIERRE);
+        try { socket.close(); } catch (IOException ignorada) { }
+    }
+
+    private void escribir() {
+        try (PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
+            while (true) {
+                String m = salida.take();
+                if (CIERRE.equals(m)) break;
+                out.println(m);
+                if (out.checkError()) break;
+            }
+        } catch (IOException | InterruptedException ex) {
+            
+        }
+        cerrar();
+    }
+
 }

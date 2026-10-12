@@ -69,4 +69,27 @@ public final class ReglasJuego implements IReglasJuego {
         EstadoPartida p = partidas.get(idPartida);
         return p != null && p.claveCoincide(clave);
     }
+
+    @Override
+    public EstadoPartida agregarJugador(int idPartida, Jugador jugador) {
+        EstadoPartida p = partidas.get(idPartida);
+        if (p == null || !EstadoPartida.ESPERANDO.equals(p.getEstado())
+                || p.estaLlena() || p.buscarPorId(jugador.getId()) != null) {
+            return null;
+        }
+        jugador.setEsAnfitrion(false);
+        jugador.setPreparado(false);
+        jugador.setColor(colorLibre(p));
+        p.agregarJugador(jugador);
+        return p;
+    }
+
+    @Override
+    public EstadoPartida cambiarPreparado(int idPartida, int idJugador, boolean preparado) {
+        EstadoPartida p = partidas.get(idPartida);
+        if (p == null) return null;
+        Jugador j = p.buscarPorId(idJugador);
+        if (j != null && !j.isEsAnfitrion()) j.setPreparado(preparado);   
+        return p;
+    }
 }
